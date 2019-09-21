@@ -1,0 +1,15 @@
+<%- include('partials/header') %>
+
+<form action="/contact" method="POST">
+  <input type="hidden" name="contactId" value="<%= contact._id %>">
+  FirstName <input type="text" name="firstName" value="<%= contact.firstName %>">
+LastName <input type="text" name="lastName" value="<%= contact.lastName %>">
+Ext <input type="text" name="ext" value="<%= contact.ext %>">
+Number <input type="text" name="number" value="<%= contact.number %>">
+
+<input type="submit" value="Add">
+
+</form>
+
+
+<%- include('partials/footer') %>

@@ -1,1 +1,21 @@
 This is dashboard...
+
+Contact list
+<br>
+<ul>
+  <% contacts.forEach(function(item){ %>
+    <form action="/delete" method="POST">
+      <input type="hidden" name="contactId" value="<%= item._id %>">
+      <li>Name: <%= item.firstName %> <%= item.lastName %> - Number: <%= item.number %></li>
+      <a href="/contact/<%= item._id %>">Edit</a>
+      <input type="submit" value="Delete">
+    </form>
+  <% }); %>
+</ul>
+
+
+<br>
+<a href="/contact">Add Contact</a>
+<br>
+<br>
+<a href="/logout">Logout</a>

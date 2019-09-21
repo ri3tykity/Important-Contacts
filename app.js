@@ -2,7 +2,16 @@ require('dotenv').config();
 const express = require("express");
 const bodyParser = require("body-parser");
 const ejs = require("ejs");
+// Mongodb
 const mongoose = require("mongoose");
+const Schema = mongoose.Schema;
+// Models
+const mContact = require(__dirname + "/model/Contact.js");
+const mUser = require(__dirname + "/model/User.js");
+// Controllers
+const userController = require(__dirname + "/controller/UserController.js");
+const contactController = require(__dirname + "/controller/ContactController.js");
+// Session-auth
 const session = require("express-session");
 const passport = require("passport");
 const passportLocalMongoose = require("passport-local-mongoose");
@@ -26,23 +35,15 @@ app.use(passport.session())
 mongoose.connect("mongodb://localhost:27017/importantContactDB", {useNewUrlParser: true, useUnifiedTopology: true});
 mongoose.set("useCreateIndex", true);
 
-const userSchema = new mongoose.Schema ({
-  username: String,
-  password: String,
-  mobile: String,
-  location: {lat: Number, long: Number},
-  rank: Number,
-  tags: [String]
-});
+mUser.userSchema.plugin(passportLocalMongoose);
 
-userSchema.plugin(passportLocalMongoose);
-
-const User = new mongoose.model("User", userSchema);
+const User = new mongoose.model("User", mUser.userSchema);
+const Contact = new mongoose.model("Contact", mContact.contactSchema);
 
 passport.use(User.createStrategy());
 
 passport.serializeUser(function(user, done) {
-  done(null, user.id);
+  done(null, user);
 });
 
 passport.deserializeUser(function(id, done) {
@@ -56,11 +57,19 @@ app.get("/", function(req, res){
 });
 
 app.get("/dashboard", function(req, res){
-  if (req.isAuthenticated()){
-    res.render("dashboard");
-  } else {
-    res.redirect("/login");
-  }
+  contactController.getUserContacts(req, res, Contact);
+});
+
+app.get("/contact/:contactId?", function(req, res){
+  contactController.getContact(req, res, Contact);
+});
+
+app.post("/delete", function(req, res){
+  contactController.deleteContact(req, res, Contact, User);
+});
+
+app.post("/contact", function(req, res){
+  contactController.addOrUpdateContact(req, res, Contact, User);
 });
 
 app.get("/login", function(req, res){
@@ -72,37 +81,16 @@ app.get("/register", function(req, res){
 });
 
 app.post("/register", function(req, res){
-
-  User.register({username: req.body.username}, req.body.password, function(err, user){
-    if (err) {
-      console.log(err);
-      res.redirect("/register");
-    } else {
-      passport.authenticate("local")(req, res, function(){
-        res.redirect("/dashboard");
-      });
-    }
-  });
+  userController.register(req, res, passport, User);
 });
 
 app.post("/login", function(req, res){
-  const user = new User({
-    username: req.body.username,
-    password: req.body.password
-  });
-
-  req.login(user, function(err){
-    if (err) {
-      console.log(err);
-      res.redirect("/login");
-    } else {
-      passport.authenticate("local")(req, res, function(){
-        res.redirect("/dashboard");
-      });
-    }
-  });
+  userController.login(req, res, passport, User);
 });
 
+app.get("/logout", function(req, res){
+  userController.logout(req, res);
+});
 
 app.listen(3000, function() {
   console.log("Server started on port 3000.");
