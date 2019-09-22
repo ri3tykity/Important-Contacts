@@ -1,4 +1,5 @@
 require('dotenv').config();
+// Express and EJS
 const express = require("express");
 const bodyParser = require("body-parser");
 const ejs = require("ejs");
@@ -6,15 +7,19 @@ const ejs = require("ejs");
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 // Models
-const mContact = require(__dirname + "/model/Contact.js");
-const mUser = require(__dirname + "/model/User.js");
+const mContact = require("./model/Contact.js");
+const mUser = require("./model/User.js");
 // Controllers
-const userController = require(__dirname + "/controller/UserController.js");
-const contactController = require(__dirname + "/controller/ContactController.js");
+const userController = require("./controller/UserController.js");
+const contactController = require("./controller/ContactController.js");
 // Session-auth
 const session = require("express-session");
 const passport = require("passport");
 const passportLocalMongoose = require("passport-local-mongoose");
+// Mailer
+const mailer = require("./utils/mailer.js");
+
+//mailer.sendMail();
 
 const app = express();
 
