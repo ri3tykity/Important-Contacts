@@ -73,11 +73,21 @@ app.post("/contact", function(req, res){
 });
 
 app.get("/login", function(req, res){
-  res.render("login");
+  if (req.isAuthenticated()){
+    res.redirect("/dashboard");
+  }
+  else {
+    res.render("login");
+  }
 });
 
 app.get("/register", function(req, res){
-  res.render("register");
+  if (req.isAuthenticated()){
+    res.redirect("/dashboard");
+  }
+  else {
+    res.render("register");
+  }
 });
 
 app.post("/register", function(req, res){
