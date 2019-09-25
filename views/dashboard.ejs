@@ -1,21 +1,50 @@
-This is dashboard...
+<style>
+
+table {
+  border-collapse: collapse;
+}
+
+table, th, td {
+  border: 1px solid black;
+  padding: 5px;
+}
+
+</style>
+
+
+<h3>Welcome!</h3>
+<h1><%= name %></h1>
+
+<br><br>
 
 Contact list
 <br>
-<ul>
+<table style="border: 1px solid">
+  <tbody>
+    <tr><td>Popularity</td><td>Name</td><td>Number</td><td>Action</td></tr>
   <% contacts.forEach(function(item){ %>
-  <form action="/delete" method="POST">
-    <input type="hidden" name="contactId" value="<%= item._id %>">
-    <li>Name: <%= item.firstName %> <%= item.lastName %> - Number: <%= item.number %></li>
-    <a href="/contact/<%= item._id %>">Edit</a>
-    <input type="submit" value="Delete">
-  </form>
+    <tr>
+      <td><%= item.savedCount %></td>
+      <td><%= item.name %></td>
+      <td><%= item.mobile %></td>
+      <td>
+          <form action="/delete" method="POST">
+            <input type="hidden" name="contactId" value="<%= item._id %>">
+          <input type="submit" value="Delete">
+        </form>
+      </td>
+  
+</tr>
   <% }); %>
-</ul>
+</tbody>
+</table>
 
 
 <br>
-<a href="/contact">Add Contact</a>
+<a href="/addcontact">Add Contact</a>
+<br>
+<br>
+<a href="/profile">Profile</a>
 <br>
 <br>
 <a href="/logout">Logout</a>

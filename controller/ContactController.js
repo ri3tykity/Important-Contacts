@@ -1,11 +1,18 @@
 const mongoose = require("mongoose");
 
-exports.getUserContacts = function (req, res, Contact) {
+exports.getUserContacts = function (req, res, Contact, User) {
   if (req.isAuthenticated()) {
     const userID = req.user._id;
-    Contact.find({ user: userID, deleteFlag: 'N' }, function (err, contactsFound) {
-      if (contactsFound) {
-        res.render("dashboard", { contacts: contactsFound });
+    User.findById(userID, function (err, foundUser) {
+      if (foundUser) {
+        var query =  User.find({_id: {$in: foundUser.contacts}}).sort({'savedCount':-1});
+
+        query.exec(function(err, foundContacts){
+          res.render("dashboard", { name: foundUser.name, contacts: foundContacts });
+        });
+        // User.find({_id: {$in: foundUser.contacts}}, { sort:{ savedCount: 1 }}, function(err, foundContacts){
+        //   res.render("dashboard", { name: foundUser.name, contacts: foundContacts });
+        // });
       }
     });
   } else {
@@ -13,20 +20,23 @@ exports.getUserContacts = function (req, res, Contact) {
   }
 }
 
-exports.getContact = function (req, res, Contact) {
+exports.getContact = function (req, res, Contact, Tag) {
   if (req.isAuthenticated()) {
     const contactIDFromParam = req.params.contactId;
-    if (contactIDFromParam) {
-      Contact.find({_id:contactIDFromParam, deleteFlag: 'N'}, function (err, contactFound) {
-        if (err) res.send('Contact not found');
-        if (contactFound) {
-          console.log('Found contact: ', contactFound[0]);
-          res.render('contact', { contact: contactFound[0] });
-        }
-      });
-    } else {
-      res.render("contact", { contact: new Contact() });
-    }
+    Tag.find({ deleteFlag: 'N' }, function (err, foundTags) {
+      if (err) res.send('No tags found');
+      if (contactIDFromParam) {
+        Contact.find({ _id: contactIDFromParam, deleteFlag: 'N' }, function (err, contactFound) {
+          if (err) res.send('Contact not found');
+          if (contactFound) {
+            console.log('Found contact: ', contactFound[0]);
+            res.render('contact', { contact: contactFound[0], tags: foundTags });
+          }
+        });
+      } else {
+        res.render("contact", { contact: new Contact(), tags: foundTags });
+      }
+    });
   } else {
     res.redirect("/login");
   }
@@ -36,16 +46,30 @@ exports.addOrUpdateContact = function (req, res, Contact, User) {
   if (req.isAuthenticated()) {
     const userID = req.user._id;
     const contactID = req.body.contactId;
-    if(contactID) {
-      Contact.findById(contactID, function(err, foundContact){
-        if(err) console.log('Err: ', err);
+    const tag = req.body.tag;
+    console.log('Tag: ', tag);
+    if (contactID) {
+      Contact.findById(contactID, function (err, foundContact) {
+        if (err) console.log('Err: ', err);
         else {
-          if(foundContact) {
+          if (foundContact) {
             foundContact.firstName = req.body.firstName;
             foundContact.lastName = req.body.lastName;
             foundContact.ext = req.body.ext;
             foundContact.number = req.body.number;
-
+            if (tag) {
+              // Validate tag
+              let isTagExist = false;
+              if (foundContact.tags) {
+                foundContact.tags.forEach(function (item) {
+                  if (item._id == tag) isTagExist = true;
+                });
+              }
+              if (!isTagExist)
+                foundContact.tags.push(tag);
+            } else {
+              foundContact.tags = [];
+            }
             foundContact.save();
             res.redirect("/dashboard");
           }
@@ -59,6 +83,7 @@ exports.addOrUpdateContact = function (req, res, Contact, User) {
         lastName: req.body.lastName,
         ext: req.body.ext,
         number: req.body.number,
+        tags: [tag],
         deleteFlag: 'N'
       });
 
@@ -75,9 +100,9 @@ exports.addOrUpdateContact = function (req, res, Contact, User) {
         }
       });
     }
-    
 
-    
+
+
   } else {
     res.redirect("/login");
   }
@@ -86,9 +111,27 @@ exports.addOrUpdateContact = function (req, res, Contact, User) {
 exports.deleteContact = function (req, res, Contact, User) {
   if (req.isAuthenticated()) {
     const contactID = req.body.contactId;
-    Contact.findById({ _id: contactID }, function(err, foundContact){
-      if(err) res.send('Contact not found');
-      if(foundContact) {
+    const userID = req.user._id;
+    User.findById(userID, function(err, foundUser){
+      if(foundUser) {
+        foundUser.contacts.remove(contactID);
+        foundUser.save();
+
+        User.findById(contactID, function(err, fUser){
+          if(fUser) {
+            if(fUser.savedCount) {
+              fUser.savedCount--;
+              fUser.save();
+            }
+          }
+        });
+
+        res.redirect("/dashboard");
+      }
+    });
+    Contact.findById({ _id: contactID }, function (err, foundContact) {
+      if (err) res.send('Contact not found');
+      if (foundContact) {
         foundContact.deleteFlag = 'Y';
         foundContact.save();
         User.findById(req.user._id, function (err, userFound) {

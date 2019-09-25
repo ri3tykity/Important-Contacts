@@ -1,0 +1,11 @@
+<form action="/save_contact" method="post">
+
+  Name: <%= contact.name %>
+  <br>
+  Mobile: <%= contact.mobile %>
+
+  <br>
+  <input type="hidden" value="<%= contact._id %>" name="id">
+  <input type="submit" value="Save">
+
+</form>

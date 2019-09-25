@@ -7,6 +7,13 @@
   Ext <input type="text" name="ext" value="<%= contact.ext %>">
   Number <input type="text" name="number" value="<%= contact.number %>">
 
+  <select name="tag">
+    <option value>Select</option>
+    <% tags.forEach(function(tag){ %>
+      <option value="<%= tag._id%>"><%= tag.tagName%></option>
+    <% }); %>
+  </select>
+
   <input type="submit" value="Add">
 
 </form>

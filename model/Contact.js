@@ -9,7 +9,7 @@ const contactSchema = new Schema({
   ext: String,
   number: String,
   location: {lat: Number, long: Number},
-  tags: [String],
+  tags: [{ type: Schema.Types.ObjectId, ref: 'Tags', unique: true }],
   rating: Number,
   created_at: Date,
   modified_at: Date,
