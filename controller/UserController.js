@@ -1,6 +1,45 @@
 const mongoose = require("mongoose");
+const mUser = require("./../model/User.js");
+const passport = require("passport");
+const passportLocalMongoose = require("passport-local-mongoose");
 
-exports.login = function (req, res, passport, User) {
+mUser.userSchema.plugin(passportLocalMongoose);
+
+const User = new mongoose.model("User", mUser.userSchema);
+
+passport.use(User.createStrategy());
+
+passport.serializeUser(function (user, done) {
+  console.log('Passport serializer: ', user);
+  done(null, user);
+});
+
+passport.deserializeUser(function (id, done) {
+  console.log('Passport deserializer: ', id);
+  User.findById(id, function (err, user) {
+    done(err, user);
+  });
+});
+
+exports.LOGIN_GET = (req, res) => {
+  if (req.isAuthenticated()) {
+    res.redirect("/dashboard");
+  }
+  else {
+    res.render("login");
+  }
+}
+
+exports.REGISTER_GET = (req, res) => {
+  if (req.isAuthenticated()) {
+    res.redirect("/dashboard");
+  }
+  else {
+    res.render("register");
+  }
+}
+
+exports.LOGIN_POST = (req, res) => {
   const user = new User({
     username: req.body.username,
     password: req.body.password
@@ -18,12 +57,12 @@ exports.login = function (req, res, passport, User) {
   });
 }
 
-exports.logout = function (req, res) {
+exports.LOGOUT = function (req, res) {
   req.logout();
   res.redirect("/");
 }
 
-exports.register = function (req, res, passport, User) {
+exports.REGISTER_POST = (req, res) => {
   const pass = req.body.password;
   const cnfPass = req.body.confirmPassword;
 
@@ -45,5 +84,39 @@ exports.register = function (req, res, passport, User) {
         });
       }
     });
+  }
+}
+
+exports.PROFILE_GET = (req, res) => {
+  if (req.isAuthenticated()) {
+    const userID = req.user._id;
+    User.findById(userID, function(err, foundUser){
+      if(err) res.render("User not found");
+      if(foundUser) {
+        res.render('profile', { user: foundUser});
+      }
+    });
+  } else {
+    res.redirect("/login");
+  }
+}
+
+exports.PROFILE_POST = (req, res) => {
+  if (req.isAuthenticated()) {
+    const name = req.body.name;
+    const mobile = req.body.mobile;
+    const userID = req.user._id;
+
+    User.findById(userID, function(err, foundUser){
+      if(err) console.log('User not found: ', err);
+      if(foundUser) {
+        foundUser.name = name;
+        foundUser.mobile = mobile;
+        foundUser.save();
+        res.redirect("/dashboard");
+      }
+    });
+  } else {
+    res.redirect("/login");
   }
 }

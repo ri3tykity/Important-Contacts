@@ -1,6 +1,13 @@
 const mongoose = require("mongoose");
+const mUser = require("./../model/User.js");
+const mContact = require("./../model/Contact.js");
+const mTag = require("./../model/Tag.js");
 
-exports.getUserContacts = function (req, res, Contact, User) {
+const User = new mongoose.model("User", mUser.userSchema);
+const Contact = new mongoose.model("Contact", mContact.contactSchema);
+const Tag = new mongoose.model("Tag", mTag.tagSchema);
+
+exports.GET_USER_CONTACT = (req, res) => {
   if (req.isAuthenticated()) {
     const userID = req.user._id;
     User.findById(userID, function (err, foundUser) {
@@ -20,7 +27,7 @@ exports.getUserContacts = function (req, res, Contact, User) {
   }
 }
 
-exports.getContact = function (req, res, Contact, Tag) {
+exports.GET_CONTACT_DATA = (req, res) => {
   if (req.isAuthenticated()) {
     const contactIDFromParam = req.params.contactId;
     Tag.find({ deleteFlag: 'N' }, function (err, foundTags) {
@@ -42,7 +49,15 @@ exports.getContact = function (req, res, Contact, Tag) {
   }
 }
 
-exports.addOrUpdateContact = function (req, res, Contact, User) {
+exports.GET_CONTACT = (req, res) => {
+  if(req.isAuthenticated()) {
+    res.render("add_contact");
+  } else {
+    res.redirect("/login");
+  }
+}
+
+exports.ADD_OR_UPDATE_CONTACT = (req, res) => {
   if (req.isAuthenticated()) {
     const userID = req.user._id;
     const contactID = req.body.contactId;

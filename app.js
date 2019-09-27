@@ -13,12 +13,17 @@ const mTag = require("./model/Tag.js");
 // Controllers
 const userController = require("./controller/UserController.js");
 const contactController = require("./controller/ContactController.js");
+// API
+const userAPI = require("./api/UserApi.js");
 // Session-auth
 const session = require("express-session");
 const passport = require("passport");
 const passportLocalMongoose = require("passport-local-mongoose");
 // Mailer
 const mailer = require("./utils/mailer.js");
+// Routes
+const HomeRoute = require("./routes/home.js");
+const LoginRoute = require("./routes/LoginRoute.js");
 
 //mailer.sendMail();
 
@@ -41,43 +46,12 @@ app.use(passport.session())
 mongoose.connect("mongodb://localhost:27017/importantContactDB", { useNewUrlParser: true, useUnifiedTopology: true });
 mongoose.set("useCreateIndex", true);
 
-mUser.userSchema.plugin(passportLocalMongoose);
+app.get("/", HomeRoute.GET);
 
-const User = new mongoose.model("User", mUser.userSchema);
-const Contact = new mongoose.model("Contact", mContact.contactSchema);
-const Tag = new mongoose.model("Tag", mTag.tagSchema);
-
-passport.use(User.createStrategy());
-
-passport.serializeUser(function (user, done) {
-  done(null, user);
-});
-
-passport.deserializeUser(function (id, done) {
-  User.findById(id, function (err, user) {
-    done(err, user);
-  });
-});
-
-app.get("/", function (req, res) {
-  res.render("home");
-});
-
-app.get("/dashboard", function (req, res) {
-  contactController.getUserContacts(req, res, Contact, User);
-});
-
-app.get("/contact/:contactId?", function (req, res) {
-  contactController.getContact(req, res, Contact, Tag);
-});
-
-app.get("/addcontact", function (req, res) {
-  if(req.isAuthenticated()) {
-    res.render("add_contact");
-  } else {
-    res.redirect("/login");
-  }
-});
+// Contact Controller
+app.get("/dashboard", contactController.GET_USER_CONTACT);
+app.get("/contact/:contactId?", contactController.GET_CONTACT_DATA);
+app.get("/addcontact", contactController.GET_CONTACT);
 
 app.post("/add_contact_step_1", function (req, res) {
   if(req.isAuthenticated()) {
@@ -136,69 +110,40 @@ app.post("/contact", function (req, res) {
   contactController.addOrUpdateContact(req, res, Contact, User);
 });
 
-app.get("/login", function (req, res) {
-  if (req.isAuthenticated()) {
-    res.redirect("/dashboard");
-  }
-  else {
-    res.render("login");
-  }
-});
+// Login Controller
+app.get("/login", userController.LOGIN_GET);
+app.get("/register", userController.REGISTER_GET);
+app.post("/register", userController.REGISTER_POST);
+app.post("/login", userController.LOGIN_POST);
+app.get("/logout", userController.LOGOUT);
 
-app.get("/register", function (req, res) {
-  if (req.isAuthenticated()) {
-    res.redirect("/dashboard");
-  }
-  else {
-    res.render("register");
-  }
-});
+app.get("/profile", userController.PROFILE_GET);
+app.post("/profile", userController.PROFILE_POST);
 
-app.post("/register", function (req, res) {
-  userController.register(req, res, passport, User);
-});
+// API
+app.post("/api/login", userAPI.LOGIN_POST);
+app.post("/api/login", userAPI.LOGOUT);
+app.post("/api/random", verifyToken, userAPI.GET_ALL_CONTACTS);
 
-app.post("/login", function (req, res) {
-  userController.login(req, res, passport, User);
-});
-
-app.get("/profile", function (req, res) {
-  if (req.isAuthenticated()) {
-    const userID = req.user._id;
-    User.findById(userID, function(err, foundUser){
-      if(err) res.render("User not found");
-      if(foundUser) {
-        res.render('profile', { user: foundUser});
-      }
-    });
+// Verify Token
+function verifyToken(req, res, next) {
+  // Get auth header value
+  const bearerHeader = req.headers['authorization'];
+  // Check if bearer is undefined
+  if(typeof bearerHeader !== 'undefined') {
+    // Split at the space
+    const bearer = bearerHeader.split(' ');
+    // Get token from array
+    const bearerToken = bearer[1];
+    // Set the token
+    req.token = bearerToken;
+    // Next middleware
+    next();
   } else {
-    res.redirect("/login");
+    // Forbidden
+    res.sendStatus(403);
   }
-});
-
-app.post("/profile", function(req, res){
-  if (req.isAuthenticated()) {
-    const name = req.body.name;
-    const mobile = req.body.mobile;
-    const userID = req.user._id;
-
-    User.findById(userID, function(err, foundUser){
-      if(err) console.log('User not found: ', err);
-      if(foundUser) {
-        foundUser.name = name;
-        foundUser.mobile = mobile;
-        foundUser.save();
-        res.redirect("/dashboard");
-      }
-    });
-  } else {
-    res.redirect("/login");
-  }
-});
-
-app.get("/logout", function (req, res) {
-  userController.logout(req, res);
-});
+}
 
 app.listen(3000, function () {
   console.log("Server started on port 3000.");
