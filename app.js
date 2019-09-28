@@ -20,10 +20,7 @@ const session = require("express-session");
 const passport = require("passport");
 const passportLocalMongoose = require("passport-local-mongoose");
 // Mailer
-const mailer = require("./utils/mailer.js");
-// Routes
-const HomeRoute = require("./routes/home.js");
-const LoginRoute = require("./routes/LoginRoute.js");
+const mailer = require("./utils/mailer");
 
 //mailer.sendMail();
 
@@ -46,7 +43,9 @@ app.use(passport.session())
 mongoose.connect('mongodb+srv://admin-ic:test1234@cluster0-146fe.mongodb.net/test?retryWrites=true&w=majority/importantContactsDB', { useNewUrlParser: true, useUnifiedTopology: true });
 mongoose.set("useCreateIndex", true);
 
-app.get("/", HomeRoute.GET);
+app.get("/", function(req, res){
+  res.render("home");
+});
 
 // Contact Controller
 app.get("/dashboard", contactController.GET_USER_CONTACT);
