@@ -43,7 +43,7 @@ app.use(session({
 app.use(passport.initialize());
 app.use(passport.session())
 
-mongoose.connect(process.env.DB_PRD_LINK + '/importantContactsDB', { useNewUrlParser: true, useUnifiedTopology: true });
+mongoose.connect('mongodb+srv://admin-ic:test1234@cluster0-146fe.mongodb.net/test?retryWrites=true&w=majority/importantContactsDB', { useNewUrlParser: true, useUnifiedTopology: true });
 mongoose.set("useCreateIndex", true);
 
 app.get("/", HomeRoute.GET);
@@ -153,6 +153,11 @@ function verifyToken(req, res, next) {
   }
 }
 
-app.listen(3000, function () {
+let port = process.env.PORT;
+if(port == null || port == "") {
+  port = 3000;
+}
+
+app.listen(port, function () {
   console.log("Server started on port 3000.");
 });
