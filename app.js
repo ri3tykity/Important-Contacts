@@ -40,7 +40,7 @@ app.use(session({
 app.use(passport.initialize());
 app.use(passport.session())
 
-mongoose.connect('mongodb+srv://admin-ic:test1234@cluster0-146fe.mongodb.net/importantContactsDB?retryWrites=true&w=majority', { useNewUrlParser: true, useUnifiedTopology: true });
+mongoose.connect('mongodb+srv://admin-ic:' + process.env.DB_PRD_PASSWORD + '@cluster0-146fe.mongodb.net/importantContactsDB?retryWrites=true&w=majority', { useNewUrlParser: true, useUnifiedTopology: true });
 mongoose.set("useCreateIndex", true);
 
 app.get("/", function(req, res){
