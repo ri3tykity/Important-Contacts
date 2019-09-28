@@ -43,7 +43,7 @@ app.use(session({
 app.use(passport.initialize());
 app.use(passport.session())
 
-mongoose.connect("mongodb://localhost:27017/importantContactDB", { useNewUrlParser: true, useUnifiedTopology: true });
+mongoose.connect(process.env.DB_PRD_LINK + '/importantContactsDB', { useNewUrlParser: true, useUnifiedTopology: true });
 mongoose.set("useCreateIndex", true);
 
 app.get("/", HomeRoute.GET);
@@ -122,8 +122,16 @@ app.post("/profile", userController.PROFILE_POST);
 
 // API
 app.post("/api/login", userAPI.LOGIN_POST);
-app.post("/api/logout", verifyToken, userAPI.LOGOUT);
+app.post("/api/register", userAPI.REGISTER);
+app.get("/api/logout", verifyToken, userAPI.LOGOUT);
 app.get("/api/home", verifyToken, userAPI.HOME);
+
+app.get("/api/addcontact", verifyToken, userAPI.ADD_CONTACT);
+app.post("/api/savecontact", verifyToken, userAPI.SAVE_CONTACT);
+app.delete("/api/removecontact", verifyToken, userAPI.REMOVE_CONTACT);
+
+app.get("/api/profile", verifyToken, userAPI.PROFILE_GET);
+app.post("/api/profile", verifyToken, userAPI.PROFILE_POST);
 
 // Verify Token
 function verifyToken(req, res, next) {

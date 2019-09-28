@@ -7,23 +7,12 @@ const userSchema = new Schema({
   password: String,
   name: String,
   mobile: String,
-  savedCount: Number,
-  contacts:[{ type: Schema.Types.ObjectId, ref: 'Contact' }],
+  savedCount: { type: Number, default: 0 },
+  contacts: [{ type: Schema.Types.ObjectId, ref: 'Contact' }],
   serviceType: [{ type: Schema.Types.ObjectId, ref: 'Tag' }],
-  location: [Number, Number],
+  location: { lat: Number, long: Number },
   visibility: Boolean,
-  created_at: Date,
-  modified_at: Date,
   deleteFlag: { type: String, default: 'N' }
-});
-
-userSchema.pre(['save', 'updateOne'], function(next){
-  now = new Date();
-  this.modified_at = now;
-  if ( !this.created_at ) {
-    this.created_at = now;
-  }
-  next();
-});
+}, { timestamps: true });
 
 exports.userSchema = userSchema;
