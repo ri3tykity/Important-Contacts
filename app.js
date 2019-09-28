@@ -54,15 +54,15 @@ app.get("/contact/:contactId?", contactController.GET_CONTACT_DATA);
 app.get("/addcontact", contactController.GET_CONTACT);
 
 app.post("/add_contact_step_1", function (req, res) {
-  if(req.isAuthenticated()) {
+  if (req.isAuthenticated()) {
     const userID = req.user._id;
     const mobile = req.body.mobile;
 
-    User.find({mobile: mobile}, function(err, arrFoundUser){
-      if(err) console.log('User with mobile not found');
-      if(arrFoundUser.length) {
+    User.find({ mobile: mobile }, function (err, arrFoundUser) {
+      if (err) console.log('User with mobile not found');
+      if (arrFoundUser.length) {
         const u = arrFoundUser[0];
-        res.render("save_contact", {contact: u});
+        res.render("save_contact", { contact: u });
       }
     });
   } else {
@@ -71,21 +71,21 @@ app.post("/add_contact_step_1", function (req, res) {
 });
 
 app.post("/save_contact", function (req, res) {
-  if(req.isAuthenticated()) {
+  if (req.isAuthenticated()) {
     const userID = req.user._id;
     const contactID = req.body.id;
 
-    User.findById(userID, function(err, foundUser){
-      if(err) console.log('User not found');
-      if(foundUser) {
+    User.findById(userID, function (err, foundUser) {
+      if (err) console.log('User not found');
+      if (foundUser) {
         foundUser.contacts.push(contactID);
         foundUser.save();
 
-        User.findById(contactID, function(err, foundContact){
-          if(err) console.log('Contact found err');
-          if(foundContact) {
+        User.findById(contactID, function (err, foundContact) {
+          if (err) console.log('Contact found err');
+          if (foundContact) {
             var savedCount = foundContact.savedCount;
-            if(savedCount === undefined) savedCount = 1;
+            if (savedCount === undefined) savedCount = 1;
             else savedCount++;
 
             foundContact.savedCount = savedCount;
@@ -122,15 +122,15 @@ app.post("/profile", userController.PROFILE_POST);
 
 // API
 app.post("/api/login", userAPI.LOGIN_POST);
-app.post("/api/login", userAPI.LOGOUT);
-app.post("/api/random", verifyToken, userAPI.GET_ALL_CONTACTS);
+app.post("/api/logout", verifyToken, userAPI.LOGOUT);
+app.get("/api/home", verifyToken, userAPI.HOME);
 
 // Verify Token
 function verifyToken(req, res, next) {
   // Get auth header value
   const bearerHeader = req.headers['authorization'];
   // Check if bearer is undefined
-  if(typeof bearerHeader !== 'undefined') {
+  if (typeof bearerHeader !== 'undefined') {
     // Split at the space
     const bearer = bearerHeader.split(' ');
     // Get token from array

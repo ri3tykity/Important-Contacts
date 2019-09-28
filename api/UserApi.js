@@ -18,69 +18,47 @@ exports.LOGIN_POST = (req, res) => {
 
   req.login(user, function (err) {
     if (err) {
-      console.log(err);
-      res.redirect("/login");
+      res.json({ status: -1, message: err });
     } else {
       passport.authenticate("local")(req, res, function () {
-        jwt.sign({user: req.user}, 'secretkey', { expiresIn: '30s' }, (err, token) => {
-                  res.json({ status: 0,
-                    token
-                  });
-                });
+        jwt.sign({ id: req.user._id }, process.env.JWT_SECRET, { expiresIn: process.env.JWT_DURATION }, (err, token) => {
+          res.json({
+            status: 0,
+            token
+          });
+        });
       });
     }
   });
-
-  // console.log('Username: ', userName);
-  // console.log('Password: ', password);
-
-  // User.find({username: userName}, function(err, arrFoundUser){
-  //   if(err) res.status(403);
-  //   if(arrFoundUser.length) {
-  //     const u = arrFoundUser[0];
-  //     console.log('FOund user: ', u);
-  //     if(u.password == password) {
-  //       jwt.sign({u}, 'secretkey', { expiresIn: '30s' }, (err, token) => {
-  //         res.json({ status: 0,
-  //           token
-  //         });
-  //       });
-  //     } else {
-  //       res.json({status: -1, message: 'Invalid password'});
-  //     }
-  //   } else res.json({status: -1, message: 'User not found'});
-  // });
 }
 
-
-exports.GET_ALL_CONTACTS = (req, res) => {
+exports.HOME = (req, res) => {
   console.log('Token: ', req.token);
-  jwt.verify(req.token, 'secretkey', (err, authData) => {
-    if(err) {
+  jwt.verify(req.token, process.env.JWT_SECRET, (err, authData) => {
+    if (err) {
+      // TODO: Handle error here... Navigate to login in APP
       res.sendStatus(403);
-    } else {      
-      res.json({
-        message: 'Post created...',
-        authData
+    } else {
+      const id = authData.id;
+      User.findById(id, function (err, foundUser) {
+        if (foundUser) {
+          var query = User.find({ _id: { $in: foundUser.contacts } }).sort({ 'savedCount': -1 });
+
+          query.exec(function (err, foundContacts) {
+            res.json({ foundUser, foundContacts });
+          });
+        } else {
+          res.json({
+            message: 'contact not found',
+            authData
+          });
+        }
       });
     }
   });
+}
 
-  // if (req.isAuthenticated()) {
-  //   const userID = req.user._id;
-  //   User.findById(userID, function (err, foundUser) {
-  //     if (foundUser) {
-  //       var query =  User.find({_id: {$in: foundUser.contacts}}).sort({'savedCount':-1});
-
-  //       query.exec(function(err, foundContacts){
-  //         res.send({ name: foundUser.name, contacts: foundContacts });
-  //       });
-  //       // User.find({_id: {$in: foundUser.contacts}}, { sort:{ savedCount: 1 }}, function(err, foundContacts){
-  //       //   res.render("dashboard", { name: foundUser.name, contacts: foundContacts });
-  //       // });
-  //     }
-  //   });
-  // } else {
-  //   res.send({});
-  // }
+exports.LOGOUT = (req, res) => {
+  req.logout();
+  res.json({ status: 0, message: 'Successfully logged out.' });
 }
