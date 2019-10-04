@@ -43,7 +43,7 @@ app.use(passport.initialize());
 app.use(passport.session())
 
 const mongoLocal = "mongodb://localhost:27017/importantContactDB";
-const mongoPROD = "mongodb+srv://admin-ic:" + process.env.DB_PRD_PASSWORD + "'@cluster0-146fe.mongodb.net/importantContactsDB?retryWrites=true&w=majority";
+const mongoPROD = "mongodb+srv://admin-ic:" + process.env.DB_PRD_PASSWORD + "@cluster0-146fe.mongodb.net/importantContactDB?retryWrites=true&w=majority";
 mongoose.connect(mongoPROD, { useNewUrlParser: true, useUnifiedTopology: true });
 mongoose.set("useCreateIndex", true);
 
