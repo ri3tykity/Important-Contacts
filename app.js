@@ -24,6 +24,8 @@ const mailer = require("./utils/mailer");
 
 //mailer.sendMail();
 
+const env = process.env.NODE_ENV || "development";
+
 const app = express();
 
 app.use(express.static("public"));
@@ -40,7 +42,9 @@ app.use(session({
 app.use(passport.initialize());
 app.use(passport.session())
 
-mongoose.connect('mongodb+srv://admin-ic:' + process.env.DB_PRD_PASSWORD + '@cluster0-146fe.mongodb.net/importantContactsDB?retryWrites=true&w=majority', { useNewUrlParser: true, useUnifiedTopology: true });
+const mongoLocal = "mongodb://localhost:27017/importantContactDB";
+const mongoPROD = "mongodb+srv://admin-ic:" + process.env.DB_PRD_PASSWORD + "'@cluster0-146fe.mongodb.net/importantContactsDB?retryWrites=true&w=majority";
+mongoose.connect(mongoLocal, { useNewUrlParser: true, useUnifiedTopology: true });
 mongoose.set("useCreateIndex", true);
 
 app.get("/", function(req, res){
@@ -148,7 +152,7 @@ function verifyToken(req, res, next) {
     next();
   } else {
     // Forbidden
-    res.sendStatus(403);
+    res.status(403).json({status: -1, message: 'Unauthorized access'});
   }
 }
 

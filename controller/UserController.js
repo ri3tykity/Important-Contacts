@@ -16,9 +16,14 @@ passport.serializeUser(function (user, done) {
 
 passport.deserializeUser(function (id, done) {
   console.log('Passport deserializer: ', id);
-  User.findById(id, function (err, user) {
-    done(err, user);
-  });
+  if(mongoose.Types.ObjectId.isValid(id)) {
+    User.findById(id, function (err, user) {
+      console.log('P Error: ', err);
+      done(err, user);
+    });
+  } else {
+    done(null, false);
+  }
 });
 
 exports.LOGIN_GET = (req, res) => {

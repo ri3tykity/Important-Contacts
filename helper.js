@@ -7,3 +7,9 @@ const t2 = new Tag({
 });
 
 Tag.insertMany([t1, t2], function(err){ console.log("Tag added...")});
+
+
+res
+    .status(500)
+    .contentType("text/plain")
+    .end("Oops! Something went wrong!");
