@@ -97,7 +97,9 @@ exports.HOME = (req, res) => {
           var query = User.find({ _id: { $in: foundUser.contacts } }).sort({ 'savedCount': -1 });
 
           query.exec(function (err, foundContacts) {
-            res.json({ foundUser, foundContacts });
+            res.json({ status: 0,
+              foundUser,
+              foundContacts });
           });
         } else {
           res.json({
