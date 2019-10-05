@@ -7,7 +7,7 @@ var validateEmail = function(email) {
 };
 
 var mobileValidate = function(mobile) {
-  return /^[2-9]{2}[0-9]{8}$/.test(mobile);
+  return /^[2-9]{1}[0-9]{9}$/.test(mobile);
 };
 
 const userSchema = new Schema({
@@ -31,6 +31,7 @@ const userSchema = new Schema({
   serviceType: [{ type: Schema.Types.ObjectId, ref: 'Tag' }],
   location: { lat: Number, long: Number },
   visibility: Boolean,
+  description: { type: String, default: 'Hey there! I am using important contacts' },
   deleteFlag: { type: String, default: 'N' }
 }, { timestamps: true });
 
