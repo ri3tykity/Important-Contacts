@@ -97,9 +97,11 @@ exports.HOME = (req, res) => {
           var query = User.find({ _id: { $in: foundUser.contacts } }).sort({ 'savedCount': -1 });
 
           query.exec(function (err, foundContacts) {
-            res.json({ status: 0,
+            res.json({
+              status: 0,
               foundUser,
-              foundContacts });
+              foundContacts
+            });
           });
         } else {
           res.json({
@@ -137,7 +139,7 @@ exports.PROFILE_GET = (req, res) => {
 
 exports.PROFILE_POST = (req, res) => {
   const name = req.body.name;
-  const mobile = req.body.mobile;
+  const description = req.body.description;
 
   jwt.verify(req.token, process.env.JWT_SECRET, (err, authData) => {
     if (err) {
@@ -149,7 +151,7 @@ exports.PROFILE_POST = (req, res) => {
         if (err) res.json({ status: -1, message: "User not found" });
         if (foundUser) {
           foundUser.name = name;
-          foundUser.mobile = mobile;
+          foundUser.description = description;
           foundUser.save();
           res.json({ status: 0, user: foundUser });
         }
