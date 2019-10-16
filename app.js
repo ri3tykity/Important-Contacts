@@ -130,6 +130,9 @@ app.get("/api/logout", verifyToken, userAPI.LOGOUT);
 app.get("/api/home", verifyToken, userAPI.HOME);
 
 app.get("/api/addcontact", verifyToken, userAPI.ADD_CONTACT);
+app.post("/api/addcontact", verifyToken, userAPI.ADD_CONTACT_V1);
+app.post("/api/updatecontact", verifyToken, userAPI.UPDATE_CONTACT);
+app.delete("/api/deletecontact", verifyToken, userAPI.DELETE_CONTACT);
 app.post("/api/savecontact", verifyToken, userAPI.SAVE_CONTACT);
 app.delete("/api/removecontact", verifyToken, userAPI.REMOVE_CONTACT);
 

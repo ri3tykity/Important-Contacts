@@ -25,7 +25,6 @@ exports.LOGIN_POST = (req, res) => {
       res.json({ status: -1, message: err });
     } else {
       passport.authenticate("local")(req, res, function () {
-        console.log('local: - ', req.user);
         jwt.sign({ id: req.user._id }, process.env.JWT_SECRET, { expiresIn: process.env.JWT_DURATION }, (err, token) => {
           res.json({
             status: 0,
@@ -126,7 +125,6 @@ exports.PROFILE_GET = (req, res) => {
       res.sendStatus(403);
     } else {
       const userID = authData.id;
-      console.log('Profile Get UserID: ', userID);
       User.findById(userID, function (err, foundUser) {
         if (err) res.json({ status: -1, message: "User not found" });
         if (foundUser) {
@@ -181,6 +179,189 @@ exports.ADD_CONTACT = (req, res) => {
     });
   } else {
     res.json({ status: -1, message: 'Please enter mobile number' })
+  }
+}
+
+exports.ADD_CONTACT_V1 = (req, res) => {
+  const name = req.body.name;
+  const mobile = req.body.mobile;
+  if (mobile && name) {
+    jwt.verify(req.token, process.env.JWT_SECRET, (err, authData) => {
+      if (err) {
+        // TODO: Handle error here... Navigate to login in APP
+        res.status(403).json({ status: -1, message: 'Forbidden' });
+      } else {
+        const userID = authData.id;
+        const contact = {
+          _id: new mongoose.Types.ObjectId(),
+          name: name,
+          mobile: mobile
+        };
+
+        User.updateOne({ _id: userID, 'contacts.mobile': { $ne: mobile } },
+          { '$push': { "contacts": contact } },
+          { safe: true, upsert: true },
+          function (err, model) {
+            if (err) {
+              res.json({ status: -1, message: err });
+            } else {
+              User.updateMany({ 'contacts.mobile': mobile },
+                { $inc: { 'contacts.$.savedCount': 1 } },
+                { safe: true, upsert: true },
+                function(err, model) {
+                  console.log('Model: ', model);
+                }
+              );
+              res.json({ status: 0, message: 'Contact successfully saved.' });
+            }
+          });
+
+
+
+        // User.findById(userID, function (err, foundUser) {
+        //   if (err) {
+
+        //   }
+        //   if (foundUser) {
+        //     var message = '';
+        //     var contacts = foundUser.contacts;
+        //     contacts.forEach(element => {
+        //       if (element.mobile == mobile) {
+        //         message = 'Contact already present';
+        //       }
+        //     });
+
+        //     if (message) {
+        //       res.json({ status: -1, message: message })
+        //     } else {
+        //       const contact = {
+        //         _id: new mongoose.Types.ObjectId(),
+        //         name: name,
+        //         mobile: mobile,
+        //         savedCount: 0
+        //       };
+        //       contacts.push(contact);
+        //       foundUser.save(function (err) {
+        //         if (err) res.json({ status: -1, message: err });
+
+        //         User.find({ mobile: mobile }, function (err, foundUsers) {
+        //           if (foundUsers.length) {
+        //             foundUsers[0].savedCount++;
+        //             foundUsers[0].save();
+        //           }
+        //         });
+
+        //         //User.updateMany({ 'contacts.mobile': mobile }, {'$set': {'contact.$.savedCount': }});
+        //         User.updateMany({ 'contacts.mobile': mobile }, function (err, foundContacts) {
+        //           if (foundContacts.length) {
+        //             //console.log('Arr Contacts: ', foundContacts.length);
+        //             for (var i = 0; i < foundContacts.length; i++) {
+        //               var qUser = foundContacts[i];
+        //               qUser.contacts.forEach(item => {
+        //                 if (item.mobile == mobile) item.savedCount = item.savedCount + 1;
+        //               });
+        //               qUser.save();
+        //               console.log('C Saved: ', qUser);
+        //             }
+        //           }
+        //         });
+        //         res.json({ status: 0, message: 'Contact successfully saved.' });
+        //       });
+        //     }
+        //   }
+        // });
+      }
+    });
+  } else {
+    res.json({ status: -1, message: 'Please enter mobile number and name.' })
+  }
+}
+
+exports.UPDATE_CONTACT = (req, res) => {
+  const cID = req.body.contactId;
+  const name = req.body.name;
+  if (mobile && name) {
+    jwt.verify(req.token, process.env.JWT_SECRET, (err, authData) => {
+      if (err) {
+        // TODO: Handle error here... Navigate to login in APP
+        res.status(403).json({ status: -1, message: 'Forbidden' });
+      } else {
+        const userID = authData.id;
+
+        User.updateOne({ 'contacts._id': cID },
+          { '$set': { 'contacts.$.name': name } },
+          function (err, model) {
+            if (err) {
+              res.json({ status: -1, message: err });
+            } else {
+              res.json({ status: 0, message: 'Contact successfully updated.' });
+            }
+          });
+
+        // User.findById(userID, function (err, foundUser) {
+        //   if (err) {
+        //     res.json({ status: -1, message: 'User not found' });
+        //   }
+        //   if (foundUser) {
+        //     var contacts = foundUser.contacts;
+        //     contacts.forEach(element => {
+        //       if (element._id == cID) {
+        //         //message = 'Contact already present';
+        //         element.name = name;
+        //       }
+        //     });
+        //     foundUser.save();
+        //     res.json({ status: 0, message: 'Contact successfully updated.' })
+        //   }
+        // });
+      }
+    });
+  } else {
+    res.json({ status: -1, message: 'Please enter mobile number and name.' })
+  }
+}
+
+exports.DELETE_CONTACT = (req, res) => {
+  const cID = req.query.contactId;
+  const mobile = req.query.mobile;
+  if (cID) {
+    jwt.verify(req.token, process.env.JWT_SECRET, (err, authData) => {
+      if (err) {
+        // TODO: Handle error here... Navigate to login in APP
+        res.status(403).json({ status: -1, message: 'Forbidden' });
+      } else {
+        const userID = authData.id;
+        console.log('CID: ', cID);
+        User.findByIdAndUpdate(userID,
+          { $pull: { 'contacts': { _id: cID } } },
+          function (err, model) {
+            if (err) {
+              res.json({ status: -1, message: err });
+            } else {
+              User.updateMany({ 'contacts.mobile': mobile },
+              { $inc: { 'contacts.$.savedCount': -1 } },
+              { safe: true, upsert: true },
+              function(err, model) {
+                console.log('Model: ', model);
+              }
+            );
+              res.json({ status: 0, message: 'Contact successfully deleted.' });
+            }
+          });
+        // User.updateOne({ _id: userID }, { "$pull": { "contacts": { "_id": cID } } }, { safe: true, multi: true }, function (err, obj) {
+        //   if(err) {
+        //     res.json({ status: -1, message: err });
+        //   } else {
+        //     console.log('OBJ: ', obj);
+        //     res.json({ status: 0, message: 'Contact successfully deleted.' });
+        //   }
+        // });
+
+
+      }
+    });
+  } else {
+    res.json({ status: -1, message: 'Please specify contact ID.' })
   }
 }
 

@@ -10,12 +10,10 @@ const User = new mongoose.model("User", mUser.userSchema);
 passport.use(User.createStrategy());
 
 passport.serializeUser(function (user, done) {
-  console.log('Passport serializer: ', user);
   done(null, user);
 });
 
 passport.deserializeUser(function (id, done) {
-  console.log('Passport deserializer: ', id);
   if(mongoose.Types.ObjectId.isValid(id)) {
     User.findById(id, function (err, user) {
       console.log('P Error: ', err);
