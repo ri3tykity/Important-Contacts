@@ -44,10 +44,10 @@ app.use(passport.session())
 
 const mongoLocal = "mongodb://localhost:27017/importantContactDB";
 const mongoPROD = "mongodb+srv://admin-ic:" + process.env.DB_PRD_PASSWORD + "@cluster0-146fe.mongodb.net/importantContactsDB?retryWrites=true&w=majority";
-mongoose.connect(mongoPROD, { useNewUrlParser: true, useUnifiedTopology: true });
+mongoose.connect(mongoPROD, { useNewUrlParser: true, useUnifiedTopology: true, useFindAndModify: false });
 mongoose.set("useCreateIndex", true);
 
-app.get("/", function(req, res){
+app.get("/", function (req, res) {
   res.render("home");
 });
 
@@ -155,12 +155,12 @@ function verifyToken(req, res, next) {
     next();
   } else {
     // Forbidden
-    res.status(403).json({status: -1, message: 'Unauthorized access'});
+    res.status(403).json({ status: -1, message: 'Unauthorized access' });
   }
 }
 
 let port = process.env.PORT;
-if(port == null || port == "") {
+if (port == null || port == "") {
   port = 3000;
 }
 

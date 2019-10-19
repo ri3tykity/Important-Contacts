@@ -30,7 +30,8 @@ const userSchema = new Schema({
   contacts: [{
     _id: Schema.Types.ObjectId,
     name: String,
-    mobile: {type: String}
+    mobile: { type: String },
+    savedCount: Number
   }],
   serviceType: [],
   location: { lat: Number, long: Number },
@@ -38,5 +39,22 @@ const userSchema = new Schema({
   description: { type: String, default: 'Hey there! I am using important contacts' },
   deleteFlag: { type: String, default: 'N' }
 }, { timestamps: true });
+
+userSchema.methods.updateSavedCount = function (mobile) {
+  this.model('User').countDocument({ 'contacts.mobile': mobile }, function (err, count) {
+    if (err) {
+
+    } else if (count) {
+      this.model('User').updateMany({ 'contacts.mobile': mobile },
+        { $set: { 'contacts.$.savedCount': count } },
+        { safe: true, upsert: true },
+        function (err, model) {
+          console.log('Model: ', model);
+        }
+      );
+    }
+
+  });
+};
 
 exports.userSchema = userSchema;
