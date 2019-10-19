@@ -251,9 +251,9 @@ exports.ADD_CONTACT_V1 = async (req, res) => {
 
                 await User.updateOne({ 'mobile': mobile },
                   { $set: { 'savedCount': count } },
-                  { safe: true, upsert: true });
+                  { safe: true });
               }
-              
+
               res.json({ status: 0, message: 'Contact successfully saved.' });
             }
           });
@@ -323,7 +323,7 @@ exports.DELETE_CONTACT = async (req, res) => {
           // update user saved count
           await User.updateOne({ 'mobile': mobile },
             { $set: { 'savedCount': count } },
-            { safe: true, upsert: true });
+            { safe: true });
 
           res.json({ status: 0, message: 'Contact successfully deleted.' });
         } else {
