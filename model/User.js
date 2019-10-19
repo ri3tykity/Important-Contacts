@@ -26,18 +26,21 @@ const userSchema = new Schema({
     required: [true, 'Mobile number required'],
     validate: [mobileValidate, 'Mobile should be 10 digit number only and not start with 0 and 1'],
   },
-  savedCount: { type: Number, default: 0 },
+  savedCount: { type: Number, default: 1 },
   contacts: [{
     _id: Schema.Types.ObjectId,
     name: String,
     mobile: { type: String },
-    savedCount: Number
+    savedCount: Number,
+    isAppUser: Boolean
   }],
   serviceType: [],
   location: { lat: Number, long: Number },
   visibility: Boolean,
   description: { type: String, default: 'Hey there! I am using important contacts' },
-  deleteFlag: { type: String, default: 'N' }
+  deleteFlag: { type: String, default: 'N' },
+  deviceID: String,
+  PushToken: String
 }, { timestamps: true });
 
 userSchema.methods.updateSavedCount = function (mobile) {

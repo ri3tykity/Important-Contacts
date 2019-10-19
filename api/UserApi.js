@@ -242,15 +242,18 @@ exports.ADD_CONTACT_V1 = async (req, res) => {
             if (err) {
               res.json({ status: -1, message: err });
             } else {
-              console.log('Model: ', model);
-              console.log('Mobile: ', mobile);
               const count = await User.countDocuments({ 'contacts.mobile': mobile });
-              console.log('Count: ', count);
+              
               if (count) {
-                const uMany = await User.updateMany({ 'contacts.mobile': mobile },
+                await User.updateMany({ 'contacts.mobile': mobile },
                   { $set: { 'contacts.$.savedCount': count } },
                   { safe: true, upsert: true });
+
+                await User.updateOne({ 'mobile': mobile },
+                  { $set: { 'savedCount': count } },
+                  { safe: true, upsert: true });
               }
+              
               res.json({ status: 0, message: 'Contact successfully saved.' });
             }
           });
@@ -308,17 +311,21 @@ exports.DELETE_CONTACT = async (req, res) => {
             }
           });
 
-          await User.updateOne({_id: userID},
+          await User.updateOne({ _id: userID },
             { $pull: { 'contacts': { _id: cID } } },
             { safe: true, upsert: true });
 
           const count = await User.countDocuments({ 'contacts.mobile': mobile });
-
+          // update individual contact count
           await User.updateMany({ 'contacts.mobile': mobile },
             { $set: { 'contacts.$.savedCount': count } },
             { safe: true, upsert: true });
+          // update user saved count
+          await User.updateOne({ 'mobile': mobile },
+            { $set: { 'savedCount': count } },
+            { safe: true, upsert: true });
 
-            res.json({ status: 0, message: 'Contact successfully deleted.' });
+          res.json({ status: 0, message: 'Contact successfully deleted.' });
         } else {
           res.json({ status: -1, message: 'User details not found.' });
 
