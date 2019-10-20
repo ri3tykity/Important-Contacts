@@ -51,6 +51,7 @@ app.get("/", function (req, res) {
   res.render("home");
 });
 
+
 // Contact Controller
 app.get("/dashboard", contactController.GET_USER_CONTACT);
 app.get("/contact/:contactId?", contactController.GET_CONTACT_DATA);
