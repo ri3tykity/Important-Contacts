@@ -243,7 +243,7 @@ exports.ADD_CONTACT_V1 = async (req, res) => {
               res.json({ status: -1, message: err });
             } else {
               const count = await User.countDocuments({ 'contacts.mobile': mobile });
-              
+
               if (count) {
                 await User.updateMany({ 'contacts.mobile': mobile },
                   { $set: { 'contacts.$.savedCount': count } },
@@ -294,6 +294,7 @@ exports.UPDATE_CONTACT = (req, res) => {
 exports.DELETE_CONTACT = async (req, res) => {
   const cID = req.query.contactId;
   //const mobile = req.query.mobile;
+  console.log('Delete contact: ', cID);
   if (cID) {
     jwt.verify(req.token, process.env.JWT_SECRET, async (err, authData) => {
       if (err) {
@@ -304,28 +305,35 @@ exports.DELETE_CONTACT = async (req, res) => {
         const fUser = await User.findById(userID);
 
         if (fUser) {
-          var mobile;
+          var mobile = null;
           fUser.contacts.forEach(function (item) {
             if (item._id == cID) {
               mobile = item.mobile;
             }
           });
 
-          await User.updateOne({ _id: userID },
-            { $pull: { 'contacts': { _id: cID } } },
-            { safe: true, upsert: true });
+          if (mobile) {
+            await User.updateOne({ _id: userID },
+              { $pull: { 'contacts': { _id: cID } } },
+              { safe: true, upsert: true });
 
-          const count = await User.countDocuments({ 'contacts.mobile': mobile });
-          // update individual contact count
-          await User.updateMany({ 'contacts.mobile': mobile },
-            { $set: { 'contacts.$.savedCount': count } },
-            { safe: true, upsert: true });
-          // update user saved count
-          await User.updateOne({ 'mobile': mobile },
-            { $set: { 'savedCount': count } },
-            { safe: true });
+            const count = await User.countDocuments({ 'contacts.mobile': mobile });
 
-          res.json({ status: 0, message: 'Contact successfully deleted.' });
+            if (count) {
+              // update individual contact count
+              await User.updateMany({ 'contacts.mobile': mobile },
+                { $set: { 'contacts.$.savedCount': count } },
+                { safe: true, upsert: true });
+              // update user saved count
+              await User.updateOne({ 'mobile': mobile },
+                { $set: { 'savedCount': count } },
+                { safe: true });
+            }
+            
+            res.json({ status: 0, message: 'Contact successfully deleted.' });
+          } else {
+            res.json({ status: -1, message: 'No mobile number found' });
+          }
         } else {
           res.json({ status: -1, message: 'User details not found.' });
 
@@ -333,7 +341,7 @@ exports.DELETE_CONTACT = async (req, res) => {
       }
     });
   } else {
-    res.json({ status: -1, message: 'Please specify contact ID.' })
+    res.json({ status: -1, message: 'Please specify contact ID.' });
   }
 }
 
