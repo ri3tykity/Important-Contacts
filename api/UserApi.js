@@ -118,7 +118,10 @@ exports.HOME = (req, res) => {
             });
           });
         } else {
-          res.json("");
+          res.json({
+            status: -1,
+            message: 'contact not found'
+          });
         }
       });
     }
