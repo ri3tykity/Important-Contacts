@@ -23,29 +23,29 @@ exports.LOGIN_POST = async (req, res, next) => {
     if (err) {
       res.json({ status: -1, message: err });
     } else {
-      passport.authenticate("local", { session: false })
-        // function(err, user, info){
-        //   if(err) res.json({status: -1, message: err});
-        //   if(!user) {
-        //     if(info)
-        //       res.json({status: -1, message: info.message});
-        //     else res.json({status: -1, message: 'User account is not valid'});
-        //   }
-        //   next();
-        // })
+      passport.authenticate("local", { session: false },
+        function(err, user, info){
+          if(err) res.json({status: -1, message: err});
+          if(!user) {
+            if(info)
+              res.json({status: -1, message: info.message});
+            else res.json({status: -1, message: 'User account is not valid'});
+          }
+          if(user) {
+            jwt.sign({ id: req.user._id }, process.env.JWT_SECRET, { expiresIn: process.env.JWT_DURATION }, (err, token) => {
+              if (err) {
+                res.json({ status: -1, message: err });
+              } else {
+                res.json({
+                  status: 0,
+                  token,
+                  user
+                });
+              }
+            });
+          }
+        })
         (req, res, function () {
-
-          jwt.sign({ id: req.user._id }, process.env.JWT_SECRET, { expiresIn: process.env.JWT_DURATION }, (err, token) => {
-            if (err) {
-              res.json({ status: -1, message: err });
-            } else {
-              res.json({
-                status: 0,
-                token
-              });
-            }
-          });
-
         });
     }
   });
@@ -85,12 +85,22 @@ exports.REGISTER = (req, res) => {
         //console.log('{}: ', obj);
         res.json({ status: RESOURCES.STATUS_CODE.KO, message: erros });
       } else {
-        jwt.sign({ id: newUser._id }, process.env.JWT_SECRET, { expiresIn: process.env.JWT_DURATION }, (err, token) => {
+        jwt.sign({ id: newUser._id }, process.env.JWT_SECRET, { expiresIn: process.env.JWT_DURATION }, async (err, token) => {
           res.json({
             status: RESOURCES.STATUS_CODE.OK,
             message: RESOURCES.INFO_MSG.registration_success,
-            token
+            token,
+            user: newUser
           });
+
+          // update the all saved contact that user is registered.
+          try {
+            await User.updateMany({ 'contacts.mobile': newUser.mobile },
+                  { $set: { 'contacts.$.isAppUser': true } },
+                  { safe: true, upsert: true });
+          } catch(err) {
+            console.log('REGISTER: ', err);
+          }
         });
       }
     });
@@ -148,27 +158,6 @@ exports.PROFILE_GET = async (req, res) => {
   } else {
     res.sendStatus(403);
   }
-  // jwt.verify(req.token, process.env.JWT_SECRET, async (err, authData) => {
-  //   if (err) {
-  //     // TODO: Handle error here... Navigate to login in APP
-  //     res.sendStatus(403);
-  //   } else {
-  //     const userID = authData.id;
-  //     const user = await User.findById(userID);
-  //     if(user) {
-  //       res.json({ status: 0, user: foundUser });
-  //     }
-  //     // User.findById(userID, function (err, foundUser) {
-  //     //   if (err) res.json({ status: -1, message: "User not found" });
-  //     //   if (foundUser) {
-  //     //     res.json({ status: 0, user: foundUser });
-  //     //   }
-  //     // });
-  //     else {
-  //       res.json({status: -1, message: 'User not found'});
-  //     }
-  //   }
-  // });
 }
 
 exports.PROFILE_POST = (req, res) => {

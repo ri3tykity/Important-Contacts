@@ -5,11 +5,6 @@ const bodyParser = require("body-parser");
 const ejs = require("ejs");
 // Mongodb
 const mongoose = require("mongoose");
-const Schema = mongoose.Schema;
-// Models
-const mContact = require("./model/Contact.js");
-const mUser = require("./model/User.js");
-const mTag = require("./model/Tag.js");
 // Controllers
 const userController = require("./controller/UserController.js");
 const contactController = require("./controller/ContactController.js");
@@ -44,7 +39,7 @@ app.use(passport.session())
 
 const mongoLocal = "mongodb://localhost:27017/importantContactDB";
 const mongoPROD = "mongodb+srv://admin-ic:" + process.env.DB_PRD_PASSWORD + "@cluster0-146fe.mongodb.net/importantContactsDB?retryWrites=true&w=majority";
-mongoose.connect(mongoPROD, { useNewUrlParser: true, useUnifiedTopology: true, useFindAndModify: false });
+mongoose.connect(mongoLocal, { useNewUrlParser: true, useUnifiedTopology: true, useFindAndModify: false });
 mongoose.set("useCreateIndex", true);
 
 app.get("/", function (req, res) {
