@@ -28,18 +28,19 @@ exports.LOGIN_POST = async (req, res, next) => {
           if(err) res.json({status: -1, message: err});
           if(!user) {
             if(info)
-              res.json({status: -1, message: info.message});
+              res.json({status: -1, message: info.message, data: null});
             else res.json({status: -1, message: 'User account is not valid'});
           }
           if(user) {
-            jwt.sign({ id: req.user._id }, process.env.JWT_SECRET, { expiresIn: process.env.JWT_DURATION }, (err, token) => {
+            jwt.sign({ id: user.id }, process.env.JWT_SECRET, { expiresIn: process.env.JWT_DURATION }, (err, token) => {
               if (err) {
-                res.json({ status: -1, message: err });
+                res.json({ status: -1, message: err, data: null });
               } else {
                 res.json({
                   status: 0,
-                  token,
-                  user
+                  token: token,
+                  data: user,
+                  message: 'User login success'
                 });
               }
             });
@@ -83,14 +84,14 @@ exports.REGISTER = (req, res) => {
           erros.push(err.message);
         }
         //console.log('{}: ', obj);
-        res.json({ status: RESOURCES.STATUS_CODE.KO, message: erros });
+        res.json({ status: RESOURCES.STATUS_CODE.KO, message: erros, data: null });
       } else {
         jwt.sign({ id: newUser._id }, process.env.JWT_SECRET, { expiresIn: process.env.JWT_DURATION }, async (err, token) => {
           res.json({
             status: RESOURCES.STATUS_CODE.OK,
             message: RESOURCES.INFO_MSG.registration_success,
-            token,
-            user: newUser
+            token: token,
+            data: newUser
           });
 
           // update the all saved contact that user is registered.
@@ -109,31 +110,24 @@ exports.REGISTER = (req, res) => {
 }
 
 exports.HOME = (req, res) => {
-  jwt.verify(req.token, process.env.JWT_SECRET, (err, authData) => {
+  jwt.verify(req.token, process.env.JWT_SECRET, async (err, authData) => {
     if (err) {
       // TODO: Handle error here... Navigate to login in APP
-      res.sendStatus(403);
+      res.status(403).json({status: -1, message: "Invalid token", data: null});
     } else {
       const id = authData.id;
-      User.findById(id, function (err, foundUser) {
-        if (err) res.json({ status: -1, message: 'Unable to fetch data.' });
-        if (foundUser) {
-          var query = User.find({ _id: { $in: foundUser.contacts } }).sort({ 'savedCount': -1 });
+      try {
+        const user = await User.find({_id: id}, {salt: 0, hash: 0});
 
-          query.exec(function (err, foundContacts) {
-            res.json({
-              status: 0,
-              foundUser,
-              foundContacts
-            });
-          });
+        if(user.length) {
+          res.json({ status: 0, data: user[0], message: 'User data' });
         } else {
-          res.json({
-            status: -1,
-            message: 'contact not found'
-          });
+          res.json({ status: -1, message: 'User not found', data: null });
         }
-      });
+      } catch(err) {
+        console.log('HOME: ', err);
+        res.json({ status: -1, message: 'Error at fetching user data', data: null });
+      }
     }
   });
 }
