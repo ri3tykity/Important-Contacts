@@ -41,7 +41,7 @@ app.use(passport.session())
 
 const mongoLocal = "mongodb://localhost:27017/importantContactDB";
 const mongoPROD = "mongodb+srv://admin-ic:" + process.env.DB_PRD_PASSWORD + "@cluster0-146fe.mongodb.net/importantContactsDB?retryWrites=true&w=majority";
-mongoose.connect(mongoLocal, { useNewUrlParser: true, useUnifiedTopology: true, useFindAndModify: false });
+mongoose.connect(mongoPROD, { useNewUrlParser: true, useUnifiedTopology: true, useFindAndModify: false });
 mongoose.set("useCreateIndex", true);
 
 const AppUpdates = new mongoose.model('Update', appUpdates.updatesSchema);
@@ -203,6 +203,6 @@ if (port == null || port == "") {
   port = 3000;
 }
 
-app.listen(port, '192.168.43.188', function () {
-  console.log("Server started on 192.168.43.188:3000.");
+app.listen(port, function () {
+  console.log("Server started on 3000.");
 });
