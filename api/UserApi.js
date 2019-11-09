@@ -11,12 +11,13 @@ const User = new mongoose.model("User", mUser.userSchema);
 //passport.use(User.createStrategy());
 
 exports.LOGIN_POST = async (req, res, next) => {
-  const userName = req.body.username;
+
+  const userName = req.body.username ? req.body.username.toLowerCase().trim() : '';
   const password = req.body.password;
 
   const user = new User({
-    username: req.body.username,
-    password: req.body.password
+    username: userName,
+    password: password
   });
 
   req.login(user, function (err) {
@@ -24,14 +25,14 @@ exports.LOGIN_POST = async (req, res, next) => {
       res.json({ status: -1, message: err });
     } else {
       passport.authenticate("local", { session: false },
-        function(err, user, info){
-          if(err) res.json({status: -1, message: err});
-          if(!user) {
-            if(info)
-              res.json({status: -1, message: info.message, data: null});
-            else res.json({status: -1, message: 'User account is not valid'});
+        function (err, user, info) {
+          if (err) res.json({ status: -1, message: err });
+          if (!user) {
+            if (info)
+              res.json({ status: -1, message: info.message, data: null });
+            else res.json({ status: -1, message: 'User account is not valid' });
           }
-          if(user) {
+          if (user) {
             jwt.sign({ id: user.id }, process.env.JWT_SECRET, { expiresIn: process.env.JWT_DURATION }, (err, token) => {
               if (err) {
                 res.json({ status: -1, message: err, data: null });
@@ -52,18 +53,26 @@ exports.LOGIN_POST = async (req, res, next) => {
   });
 }
 
-exports.REGISTER = (req, res) => {
+exports.REGISTER = async (req, res) => {
 
-  const username = req.body.username;
+  const username = req.body.username ? req.body.username.toLowerCase() : '';
   const name = req.body.name;
   const mobile = req.body.mobile;
   const pass = req.body.password;
   const cnfPass = req.body.confirmPassword;
 
+  try {
+    const usr = await User.find({ mobile: mobile });
+    if (usr.length) {
+      return res.json({ status: -1, message: 'Mobile number already registered' });
+    }
+  } catch (err) {
+    console.log('REGISTER: ' + err);
+    return res.json({ status: -1, message: err });
+  }
   if (pass !== cnfPass) {
-    res.json({ status: RESOURCES.STATUS_CODE.KO, message: RESOURCES.ERROR_MSG.password_missmatch });
+    return res.json({ status: RESOURCES.STATUS_CODE.KO, message: RESOURCES.ERROR_MSG.password_missmatch });
   } else {
-
     var newUser = new User({
       _id: new mongoose.Types.ObjectId(),
       username: username,
@@ -73,15 +82,15 @@ exports.REGISTER = (req, res) => {
 
     User.register(newUser, pass, function (err, user) {
       if (err) {
-        var erros = [];
+        var erros = '';
         var errM = err.errors;
         if (errM) {
           for (var key in errM) {
             var obj = errM[key];
-            erros.push(obj.message);
+            erros += obj.message + ' | ';
           }
         } else {
-          erros.push(err.message);
+          erros = err.message;
         }
         //console.log('{}: ', obj);
         res.json({ status: RESOURCES.STATUS_CODE.KO, message: erros, data: null });
@@ -97,10 +106,11 @@ exports.REGISTER = (req, res) => {
           // update the all saved contact that user is registered.
           try {
             await User.updateMany({ 'contacts.mobile': newUser.mobile },
-                  { $set: { 'contacts.$.isAppUser': true } },
-                  { safe: true, upsert: true });
-          } catch(err) {
+              { $set: { 'contacts.$.isAppUser': true } },
+              { safe: true, upsert: true });
+          } catch (err) {
             console.log('REGISTER: ', err);
+            return res.json({ status: -1, message: err });
           }
         });
       }
@@ -112,19 +122,18 @@ exports.REGISTER = (req, res) => {
 exports.HOME = (req, res) => {
   jwt.verify(req.token, process.env.JWT_SECRET, async (err, authData) => {
     if (err) {
-      // TODO: Handle error here... Navigate to login in APP
-      res.status(403).json({status: -1, message: "Invalid token", data: null});
+      res.status(403).json({ status: -1, message: "Invalid token", data: null });
     } else {
       const id = authData.id;
       try {
-        const user = await User.find({_id: id}, {salt: 0, hash: 0});
+        const user = await User.find({ _id: id }, { salt: 0, hash: 0 });
 
-        if(user.length) {
+        if (user.length) {
           res.json({ status: 0, data: user[0], message: 'User data' });
         } else {
           res.json({ status: -1, message: 'User not found', data: null });
         }
-      } catch(err) {
+      } catch (err) {
         console.log('HOME: ', err);
         res.json({ status: -1, message: 'Error at fetching user data', data: null });
       }
@@ -207,39 +216,53 @@ exports.ADD_CONTACT_V1 = async (req, res) => {
   if (mobile && name) {
     jwt.verify(req.token, process.env.JWT_SECRET, async (err, authData) => {
       if (err) {
-        // TODO: Handle error here... Navigate to login in APP
-        res.status(403).json({ status: -1, message: 'Forbidden' });
+        res.status(403).json({ status: -1, message: 'Token expired' });
       } else {
         const userID = authData.id;
-        const contact = {
-          _id: new mongoose.Types.ObjectId(),
-          name: name,
-          mobile: mobile,
-          savedCount: 1
-        };
 
-        User.updateOne({ _id: userID, 'contacts.mobile': { $ne: mobile } },
-          { '$push': { "contacts": contact } },
-          { safe: true, upsert: true },
-          async function (err, model) {
-            if (err) {
-              res.json({ status: -1, message: err });
-            } else {
-              const count = await User.countDocuments({ 'contacts.mobile': mobile });
+        try {
+          const usr = await User.find({ mobile: mobile });
 
-              if (count) {
-                await User.updateMany({ 'contacts.mobile': mobile },
-                  { $set: { 'contacts.$.savedCount': count } },
-                  { safe: true, upsert: true });
+          var isAppUser = usr.length ? true : false;
 
-                await User.updateOne({ 'mobile': mobile },
-                  { $set: { 'savedCount': count } },
-                  { safe: true });
+          const contact = {
+            _id: new mongoose.Types.ObjectId(),
+            name: name,
+            mobile: mobile,
+            savedCount: 1,
+            isAppUser: isAppUser
+          };
+
+          User.updateOne({ _id: userID, 'contacts.mobile': { $ne: mobile } },
+            { '$push': { "contacts": contact } },
+            { safe: true, upsert: true },
+            async function (err, model) {
+              if (err) {
+                res.json({ status: -1, message: err });
+              } else {
+                try {
+                  const count = await User.countDocuments({ 'contacts.mobile': mobile });
+
+                  if (count) {
+                    await User.updateMany({ 'contacts.mobile': mobile },
+                      { $set: { 'contacts.$.savedCount': count } },
+                      { safe: true, upsert: true });
+
+                    await User.updateOne({ 'mobile': mobile },
+                      { $set: { 'savedCount': count } },
+                      { safe: true });
+                  }
+
+                  res.json({ status: 0, message: 'Contact successfully saved.' });
+                } catch (err) {
+                  console.log('ADD_CONTACT_V1: ' + err);
+                  res.json({ status: -1, message: err });
+                }
               }
+            });
+        } catch (err) {
 
-              res.json({ status: 0, message: 'Contact successfully saved.' });
-            }
-          });
+        }
       }
     });
   } else {
@@ -250,10 +273,9 @@ exports.ADD_CONTACT_V1 = async (req, res) => {
 exports.UPDATE_CONTACT = (req, res) => {
   const cID = req.body.contactId;
   const name = req.body.name;
-  if (mobile && name) {
+  if (name) {
     jwt.verify(req.token, process.env.JWT_SECRET, (err, authData) => {
       if (err) {
-        // TODO: Handle error here... Navigate to login in APP
         res.status(403).json({ status: -1, message: 'Forbidden' });
       } else {
         const userID = authData.id;
@@ -270,19 +292,16 @@ exports.UPDATE_CONTACT = (req, res) => {
       }
     });
   } else {
-    res.json({ status: -1, message: 'Please enter mobile number and name.' })
+    res.json({ status: -1, message: 'Please enter name.' })
   }
 }
 
 exports.DELETE_CONTACT = async (req, res) => {
   const cID = req.query.contactId;
-  //const mobile = req.query.mobile;
-  console.log('Delete contact: ', cID);
   if (cID) {
     jwt.verify(req.token, process.env.JWT_SECRET, async (err, authData) => {
       if (err) {
-        // TODO: Handle error here... Navigate to login in APP
-        res.status(403).json({ status: -1, message: 'Forbidden' });
+        res.status(403).json({ status: -1, message: 'Invalid token' });
       } else {
         const userID = authData.id;
         const fUser = await User.findById(userID);
@@ -312,7 +331,7 @@ exports.DELETE_CONTACT = async (req, res) => {
                 { $set: { 'savedCount': count } },
                 { safe: true });
             }
-            
+
             res.json({ status: 0, message: 'Contact successfully deleted.' });
           } else {
             res.json({ status: -1, message: 'No mobile number found' });
@@ -397,4 +416,23 @@ exports.REMOVE_CONTACT = (req, res) => {
   } else {
     res.json({ status: -1, message: 'Contact ID is missing...' });
   }
+}
+
+exports.UPDATE_DESCRIPTION = (req, res) => {
+  //const name = req.body.name;
+  const description = req.body.description;
+
+  jwt.verify(req.token, process.env.JWT_SECRET, async (err, authData) => {
+    if (err) {
+      res.status(403).json({ status: -1, message: 'Invalid token' });
+    } else {
+      const userID = authData.id;
+      try {
+        const query = await User.findByIdAndUpdate(userID, { $set: { 'description': description }});
+        res.json({status: 0, message: 'Status updated', data: null});
+      } catch(err) {
+        res.json({status: -1, message: 'Please try again later'});
+      }
+    }
+  });
 }

@@ -5,11 +5,13 @@ const bodyParser = require("body-parser");
 const ejs = require("ejs");
 // Mongodb
 const mongoose = require("mongoose");
+const appUpdates = require("./model/Updates.js");
 // Controllers
 const userController = require("./controller/UserController.js");
 const contactController = require("./controller/ContactController.js");
 // API
 const userAPI = require("./api/UserApi.js");
+const callAPI = require("./api/CallApi.js");
 // Session-auth
 const session = require("express-session");
 const passport = require("passport");
@@ -41,6 +43,29 @@ const mongoLocal = "mongodb://localhost:27017/importantContactDB";
 const mongoPROD = "mongodb+srv://admin-ic:" + process.env.DB_PRD_PASSWORD + "@cluster0-146fe.mongodb.net/importantContactsDB?retryWrites=true&w=majority";
 mongoose.connect(mongoLocal, { useNewUrlParser: true, useUnifiedTopology: true, useFindAndModify: false });
 mongoose.set("useCreateIndex", true);
+
+const AppUpdates = new mongoose.model('Update', appUpdates.updatesSchema);
+
+// Add initial data
+AppUpdates.find({}, function (err, arrUpdates) {
+  if(err) {
+    console.log('APP: ', err);
+  }
+  if(arrUpdates.length == 0) {
+
+    var row = new AppUpdates({
+      versionName: 'Version-1.0.3',
+      versionNumber: '103',
+      currentVersion:'103',
+      forceUpdateRequired: false,
+      message: 'Stable version',
+      description: 'First app version updated'
+    });
+
+    row.save();
+  }
+});
+
 
 app.get("/", function (req, res) {
   res.render("home");
@@ -135,6 +160,24 @@ app.delete("/api/removecontact", verifyToken, userAPI.REMOVE_CONTACT);
 app.get("/api/profile", verifyToken, userAPI.PROFILE_GET);
 app.post("/api/profile", verifyToken, userAPI.PROFILE_POST);
 
+app.post("/api/description", verifyToken, userAPI.UPDATE_DESCRIPTION);
+
+// CALL API
+app.get("/api/callsearch", callAPI.CALL_SEARCH);
+
+app.get('/api/updates', async (req, res) => {
+  try {
+    const update = await AppUpdates.find({});
+    if(update.length) {
+      res.json({status: 0, data: update[0], message: 'Updates available'});
+    } else {
+      res.json({status: -1, message: 'No updates available'});
+    }
+  } catch(err) {
+    res.send({status: -1, message: 'Unable to get updates'})
+  }
+});
+
 // Verify Token
 function verifyToken(req, res, next) {
   // Get auth header value
@@ -160,6 +203,6 @@ if (port == null || port == "") {
   port = 3000;
 }
 
-app.listen(port, function () {
-  console.log("Server started on port 3000.");
+app.listen(port, '192.168.43.188', function () {
+  console.log("Server started on 192.168.43.188:3000.");
 });

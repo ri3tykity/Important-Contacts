@@ -38,7 +38,7 @@
 							"urlencoded": [
 								{
 									"key": "username",
-									"value": "sayantan@gmail.com",
+									"value": "dee1@gmail.com",
 									"type": "text"
 								},
 								{
@@ -132,7 +132,7 @@
 							"urlencoded": [
 								{
 									"key": "username",
-									"value": "dee@gmail.com",
+									"value": "dee2@gmail.com",
 									"type": "text"
 								},
 								{
@@ -143,6 +143,16 @@
 								{
 									"key": "confirmPassword",
 									"value": "1234",
+									"type": "text"
+								},
+								{
+									"key": "name",
+									"value": "Dee Ojha",
+									"type": "text"
+								},
+								{
+									"key": "mobile",
+									"value": "8335855005",
 									"type": "text"
 								}
 							]
@@ -165,6 +175,9 @@
 		},
 		{
 			"name": "Home",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
 			"request": {
 				"auth": {
 					"type": "bearer",
@@ -177,7 +190,18 @@
 					]
 				},
 				"method": "GET",
-				"header": [],
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"value": "application/x-www-form-urlencoded",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": []
+				},
 				"url": {
 					"raw": "{{baseUrl}}/api/home",
 					"host": [
@@ -204,64 +228,38 @@
 						}
 					]
 				},
-				"method": "GET",
+				"method": "POST",
 				"header": [
 					{
 						"key": "Content-Type",
 						"name": "Content-Type",
 						"value": "application/x-www-form-urlencoded",
-						"type": "text",
-						"disabled": true
+						"type": "text"
 					}
 				],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": [
+						{
+							"key": "name",
+							"value": "F",
+							"type": "text"
+						},
+						{
+							"key": "mobile",
+							"value": "8888888888",
+							"type": "text"
+						}
+					]
+				},
 				"url": {
-					"raw": "{{baseUrl}}/api/addcontact?mobile=8335855005",
+					"raw": "{{baseUrl}}/api/addcontact",
 					"host": [
 						"{{baseUrl}}"
 					],
 					"path": [
 						"api",
 						"addcontact"
-					],
-					"query": [
-						{
-							"key": "mobile",
-							"value": "8335855005"
-						}
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "SaveContact",
-			"request": {
-				"auth": {
-					"type": "bearer",
-					"bearer": [
-						{
-							"key": "token",
-							"value": "{{token}}",
-							"type": "string"
-						}
-					]
-				},
-				"method": "POST",
-				"header": [],
-				"url": {
-					"raw": "{{baseUrl}}/api/savecontact?contactID=5d8f5e81876b976a4cabd34f",
-					"host": [
-						"{{baseUrl}}"
-					],
-					"path": [
-						"api",
-						"savecontact"
-					],
-					"query": [
-						{
-							"key": "contactID",
-							"value": "5d8f5e81876b976a4cabd34f"
-						}
 					]
 				}
 			},
@@ -281,9 +279,20 @@
 					]
 				},
 				"method": "DELETE",
-				"header": [],
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"value": "application/x-www-form-urlencoded",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": []
+				},
 				"url": {
-					"raw": "{{baseUrl}}/api/removecontact?contactID=5d8f49437a0e627058679382",
+					"raw": "{{baseUrl}}/api/removecontact?contactID=5da37057713fc45904468ad7",
 					"host": [
 						"{{baseUrl}}"
 					],
@@ -294,7 +303,45 @@
 					"query": [
 						{
 							"key": "contactID",
-							"value": "5d8f49437a0e627058679382"
+							"value": "5da37057713fc45904468ad7"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "DeleteContact",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/api/deletecontact?contactId=5dab758e1375950004c1a237&mobile=12345674",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"deletecontact"
+					],
+					"query": [
+						{
+							"key": "contactId",
+							"value": "5dab758e1375950004c1a237"
+						},
+						{
+							"key": "mobile",
+							"value": "12345674"
 						}
 					]
 				}
@@ -303,6 +350,34 @@
 		},
 		{
 			"name": "Profile",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/api/profile",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"profile"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Call Search",
 			"request": {
 				"auth": {
 					"type": "bearer",
@@ -356,12 +431,112 @@
 					"urlencoded": [
 						{
 							"key": "name",
-							"value": "Deepak",
+							"value": "Shweta Ojha D",
 							"type": "text"
 						},
 						{
-							"key": "mobile",
-							"value": "8335855005",
+							"key": "description",
+							"value": "2222",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "{{baseUrl}}/api/profile",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"profile"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Update Status",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"value": "application/x-www-form-urlencoded",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": [
+						{
+							"key": "name",
+							"value": "Shweta Ojha D",
+							"type": "text"
+						},
+						{
+							"key": "description",
+							"value": "2222",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "{{baseUrl}}/api/profile",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"api",
+						"profile"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Update App",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"value": "application/x-www-form-urlencoded",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": [
+						{
+							"key": "name",
+							"value": "Shweta Ojha D",
+							"type": "text"
+						},
+						{
+							"key": "description",
+							"value": "2222",
 							"type": "text"
 						}
 					]
@@ -404,9 +579,15 @@
 	],
 	"variable": [
 		{
-			"id": "39f299e3-e868-4dbe-bcd9-c6072e70f0ca",
+			"id": "31df35e2-4dbd-4e2c-87f4-92480568c73e",
 			"key": "baseUrl",
 			"value": "http://localhost:3000",
+			"type": "string"
+		},
+		{
+			"id": "47a9c925-b016-48e4-830a-a56b8dc6a0bb",
+			"key": "baseUrlMob",
+			"value": "http://192.168.43.188:3000",
 			"type": "string"
 		}
 	],
