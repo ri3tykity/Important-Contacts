@@ -1,6 +1,6 @@
 {
   "name": "important-contacts",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Important contact application",
   "main": "app.js",
   "scripts": {
@@ -10,7 +10,7 @@
     "type": "git",
     "url": "git+https://github.com/ri3tykity/Important-Contacts.git"
   },
-  "author": "",
+  "author": "Deepak Kumar Ojha",
   "license": "ISC",
   "engines": {
     "node": "8.16.0"

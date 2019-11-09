@@ -32,7 +32,7 @@ const userSchema = new Schema({
     name: String,
     mobile: { type: String },
     savedCount: Number,
-    isAppUser: Boolean
+    isAppUser: {type: Boolean, default: false}
   }],
   serviceType: [],
   location: { lat: Number, long: Number },
